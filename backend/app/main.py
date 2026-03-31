@@ -1,10 +1,13 @@
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.database import engine, Base
-from app.routers import auth, parking, ocr, reservation, ws
+from app.routers import auth, parking, ocr, reservation, vehicle, ws
+from app.routers.ws import listen_for_updates
+from app.services.scheduler import start_scheduler
 
 settings = get_settings()
 
@@ -12,7 +15,22 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+
+    ws_task = asyncio.create_task(listen_for_updates())
+    scheduler_task = asyncio.create_task(start_scheduler())
+
     yield
+
+    ws_task.cancel()
+    scheduler_task.cancel()
+    try:
+        await ws_task
+    except asyncio.CancelledError:
+        pass
+    try:
+        await scheduler_task
+    except asyncio.CancelledError:
+        pass
 
 
 app = FastAPI(
@@ -34,6 +52,7 @@ app.include_router(auth.router)
 app.include_router(parking.router)
 app.include_router(ocr.router)
 app.include_router(reservation.router)
+app.include_router(vehicle.router)
 app.include_router(ws.router)
 
 

@@ -15,14 +15,18 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
 
     async def broadcast(self, message: dict):
+        dead_connections = []
         for connection in self.active_connections[:]:
             try:
                 await connection.send_json(message)
             except Exception:
-                self.active_connections.remove(connection)
+                dead_connections.append(connection)
+        for conn in dead_connections:
+            self.disconnect(conn)
 
 
 manager = ConnectionManager()
@@ -41,6 +45,8 @@ async def parking_websocket(websocket: WebSocket):
 
 async def listen_for_updates():
     pubsub = cache_service.subscribe_parking_updates()
+    if pubsub is None:
+        return
     while True:
         message = pubsub.get_message(ignore_subscribe_messages=True, timeout=1)
         if message and message["type"] == "message":

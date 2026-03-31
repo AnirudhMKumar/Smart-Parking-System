@@ -27,8 +27,11 @@ final reservationsProvider = FutureProvider<List<Reservation>>((ref) async {
   return data.map((json) => Reservation.fromJson(json)).toList();
 });
 
-final reservationHistoryProvider = FutureProvider<List<Reservation>>((ref) async {
+final reservationHistoryProvider =
+    FutureProvider<List<Reservation>>((ref) async {
   final api = ref.watch(apiServiceProvider);
-  final data = await api.getReservationHistory();
+  final data = await api.getReservations();
   return data.map((json) => Reservation.fromJson(json)).toList();
 });
+
+final wsConnectedProvider = StateProvider<bool>((ref) => false);

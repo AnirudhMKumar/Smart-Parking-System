@@ -61,6 +61,10 @@ def set_parking_stats(stats: dict) -> None:
     _cache_set(PARKING_STATS_KEY, json.dumps(stats), ttl=60)
 
 
+def delete_parking_stats() -> None:
+    _cache_delete(PARKING_STATS_KEY)
+
+
 def publish_parking_update(message: dict) -> None:
     r = get_redis()
     if r:

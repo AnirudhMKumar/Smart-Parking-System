@@ -9,6 +9,8 @@ from app.models.parking import ParkingSpot
 from app.schemas.vehicle import OCRResponse, OCRResult, EntryRequest, ExitRequest, EntryExitResponse
 from app.config import get_settings
 from app.utils.security import get_current_user
+from app.utils.image_utils import preprocess_plate_image, resize_if_small
+from app.services import cache_service
 
 router = APIRouter(prefix="/api/ocr", tags=["License Plate Recognition"])
 
@@ -81,6 +83,7 @@ async def recognize_plate(file: UploadFile, db: Session = Depends(get_db)):
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         if img is None:
             raise ValueError("Invalid image")
+        img = resize_if_small(img)
     except Exception:
         raise HTTPException(status_code=400, detail="Could not read image")
 
@@ -97,8 +100,21 @@ async def recognize_plate(file: UploadFile, db: Session = Depends(get_db)):
 
 
 @router.post("/entry", response_model=EntryExitResponse)
-def record_entry(data: EntryRequest, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def record_entry(data: EntryRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     plate_number = data.plate_number.upper().strip()
+
+    vehicle = db.query(Vehicle).filter(
+        Vehicle.user_id == current_user.id,
+        Vehicle.plate_number == plate_number,
+    ).first()
+    if not vehicle:
+        vehicle = Vehicle(
+            user_id=current_user.id,
+            plate_number=plate_number,
+            plate_image_url=data.image_url,
+        )
+        db.add(vehicle)
+        db.flush()
 
     spot = None
     if data.spot_id:
@@ -125,6 +141,14 @@ def record_entry(data: EntryRequest, db: Session = Depends(get_db), _: User = De
     db.commit()
     db.refresh(record)
     db.refresh(spot)
+
+    cache_service.delete_parking_stats()
+    cache_service.publish_parking_update({
+        "type": "entry",
+        "plate_number": plate_number,
+        "spot_id": spot.id,
+        "spot_number": spot.spot_number,
+    })
 
     return EntryExitResponse(
         success=True,
@@ -182,6 +206,16 @@ def record_exit(data: ExitRequest, db: Session = Depends(get_db), _: User = Depe
     db.add(record)
     db.commit()
     db.refresh(record)
+
+    cache_service.delete_parking_stats()
+    cache_service.publish_parking_update({
+        "type": "exit",
+        "plate_number": plate_number,
+        "spot_id": spot.id if spot else None,
+        "spot_number": spot.spot_number if spot else None,
+        "duration_minutes": duration_minutes,
+        "amount": amount,
+    })
 
     return EntryExitResponse(
         success=True,

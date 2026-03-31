@@ -29,8 +29,9 @@ def update_spot_status(db: Session, spot_id: int, status: str) -> ParkingSpot | 
         spot.status = status
         db.commit()
         db.refresh(spot)
-        cache_service.set_spot_cache(spot_id, status)
-        cache_service.delete_spot_cache(spot_id)  # invalidate
+        cache_service.delete_spot_cache(spot_id)
+        cache_service.delete_parking_stats()
+        cache_service.publish_parking_update({"type": "spot_update", "spot_id": spot_id, "status": status})
     return spot
 
 

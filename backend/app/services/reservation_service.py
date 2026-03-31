@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from app.models.reservation import Reservation
 from app.models.parking import ParkingSpot
 from app.schemas.reservation import ReservationCreate
-from app.services import parking_service
+from app.services import parking_service, cache_service
 
 
 def create_reservation(db: Session, user_id: int, data: ReservationCreate) -> Reservation:
@@ -38,6 +38,13 @@ def create_reservation(db: Session, user_id: int, data: ReservationCreate) -> Re
     spot.status = "reserved"
     db.commit()
     db.refresh(reservation)
+    cache_service.delete_parking_stats()
+    cache_service.publish_parking_update({
+        "type": "reservation_created",
+        "reservation_id": reservation.id,
+        "spot_id": reservation.spot_id,
+        "status": "reserved",
+    })
     return reservation
 
 
@@ -68,6 +75,13 @@ def cancel_reservation(db: Session, reservation_id: int, user_id: int) -> Reserv
         spot.status = "available"
     db.commit()
     db.refresh(reservation)
+    cache_service.delete_parking_stats()
+    cache_service.publish_parking_update({
+        "type": "reservation_cancelled",
+        "reservation_id": reservation.id,
+        "spot_id": reservation.spot_id,
+        "status": "available",
+    })
     return reservation
 
 

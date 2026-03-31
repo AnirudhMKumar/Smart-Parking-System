@@ -153,6 +153,35 @@ class ApiService {
     final response = await _dio.get('/api/reservations/history');
     return response.data;
   }
+
+  // Vehicles
+  Future<List<dynamic>> getVehicles() async {
+    final response = await _dio.get('/api/vehicles');
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> addVehicle({
+    required String plateNumber,
+    String? vehicleType,
+    String? color,
+  }) async {
+    final response = await _dio.post('/api/vehicles', data: {
+      'plate_number': plateNumber,
+      if (vehicleType != null) 'vehicle_type': vehicleType,
+      if (color != null) 'color': color,
+    });
+    return response.data;
+  }
+
+  Future<void> deleteVehicle(int id) async {
+    await _dio.delete('/api/vehicles/$id');
+  }
+
+  // Parking lot info
+  Future<List<dynamic>> getParkingLots() async {
+    final response = await _dio.get('/api/parking/lot');
+    return response.data;
+  }
 }
 
 final apiServiceProvider = Provider<ApiService>((ref) => ApiService());
