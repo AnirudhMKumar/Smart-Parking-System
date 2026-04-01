@@ -1,9 +1,6 @@
 class ApiConfig {
-  // static const String baseUrl = 'http://10.0.2.2:8000'; // Android emulator
-  // static const String baseUrl = 'http://localhost:8000'; // iOS simulator
-  static const String baseUrl = 'http://0.X.0.X:8000'; // Physical device
-
-  static const String wsUrl = 'ws://0.X.0.X:8000/ws/parking';
+  static const String baseUrl = 'https://smartps.onrender.com';
+  static const String wsUrl = 'wss://smartps.onrender.com/ws/parking';
 
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);

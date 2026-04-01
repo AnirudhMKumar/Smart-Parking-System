@@ -4,7 +4,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.database import engine, Base
+from app.database import engine, Base, SessionLocal
+from app.models.parking import ParkingLot, ParkingSpot
 from app.routers import auth, parking, ocr, reservation, vehicle, ws
 from app.routers.ws import listen_for_updates
 from app.services.scheduler import start_scheduler
@@ -12,9 +13,37 @@ from app.services.scheduler import start_scheduler
 settings = get_settings()
 
 
+def _seed_initial_data():
+    db = SessionLocal()
+    try:
+        lot_count = db.query(ParkingLot).count()
+        if lot_count == 0:
+            lot = ParkingLot(name="SmartPS Main Lot", address="Downtown", total_spots=30, hourly_rate=5.0)
+            db.add(lot)
+            db.flush()
+            sections = ["A", "B"]
+            spot_num = 1
+            for section in sections:
+                for _ in range(15):
+                    spot = ParkingSpot(
+                        lot_id=lot.id,
+                        spot_number=f"{section}{spot_num:03d}",
+                        spot_type="regular",
+                        status="available",
+                        floor=1,
+                        section=section,
+                    )
+                    db.add(spot)
+                    spot_num += 1
+            db.commit()
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    _seed_initial_data()
 
     ws_task = asyncio.create_task(listen_for_updates())
     scheduler_task = asyncio.create_task(start_scheduler())
