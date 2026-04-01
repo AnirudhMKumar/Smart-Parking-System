@@ -45,12 +45,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: wsConnected ? Colors.green : Colors.red,
-                    shape: BoxShape.circle,
+                Tooltip(
+                  message: wsConnected ? 'Connected to server' : 'Disconnected',
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: wsConnected ? Colors.green : Colors.red,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -90,8 +93,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       .bodyLarge
                       ?.copyWith(color: Colors.grey)),
               const SizedBox(height: 24),
-
-              // Stats Card
               statsAsync.when(
                 loading: () => const _StatsSkeleton(),
                 error: (e, _) => Card(
@@ -150,8 +151,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Quick Actions
               Text('Quick Actions',
                   style: Theme.of(context)
                       .textTheme
@@ -194,8 +193,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-
-              // Active Reservations
               Text('Active Reservations',
                   style: Theme.of(context)
                       .textTheme
@@ -210,16 +207,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 error: (e, _) => Card(
                     child: Padding(
                         padding: const EdgeInsets.all(16),
-                        child: Text('No reservations'))),
+                        child: Text('Unable to load reservations',
+                            style: TextStyle(color: Colors.grey.shade600)))),
                 data: (reservations) {
                   final active = reservations.where((r) => r.isActive).toList();
                   if (active.isEmpty) {
-                    return const Card(
+                    return Card(
                       child: Padding(
-                          padding: EdgeInsets.all(32),
-                          child: Center(
-                              child: Text('No active reservations',
-                                  style: TextStyle(color: Colors.grey)))),
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            children: [
+                              Icon(Icons.bookmark_border,
+                                  size: 48, color: Colors.grey.shade300),
+                              const SizedBox(height: 8),
+                              Text('No active reservations',
+                                  style:
+                                      TextStyle(color: Colors.grey.shade600)),
+                              const SizedBox(height: 4),
+                              TextButton(
+                                onPressed: () => context.go('/reservations'),
+                                child: const Text('Make a reservation'),
+                              ),
+                            ],
+                          )),
                     );
                   }
                   return Column(

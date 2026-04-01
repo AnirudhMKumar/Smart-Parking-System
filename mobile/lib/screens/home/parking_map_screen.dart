@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/parking_provider.dart';
 import '../../config/theme.dart';
 
@@ -148,6 +149,18 @@ class _SpotCell extends StatelessWidget {
             if (spot.section != null)
               _DetailRow(label: 'Section', value: spot.section),
             const SizedBox(height: 16),
+            if (spot.isAvailable)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    context.go('/reservations');
+                  },
+                  icon: const Icon(Icons.bookmark_add),
+                  label: const Text('Reserve This Spot'),
+                ),
+              ),
           ],
         ),
       ),
