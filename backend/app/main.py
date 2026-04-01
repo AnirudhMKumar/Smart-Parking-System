@@ -8,6 +8,7 @@ from app.database import engine, Base, SessionLocal
 from app.models.parking import ParkingLot, ParkingSpot
 from app.routers import auth, parking, ocr, reservation, vehicle, ws
 from app.routers.ws import listen_for_updates
+from app.routers.ocr import get_ocr
 from app.services.scheduler import start_scheduler
 
 settings = get_settings()
@@ -44,6 +45,9 @@ def _seed_initial_data():
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     _seed_initial_data()
+
+    import threading
+    threading.Thread(target=get_ocr, daemon=True).start()
 
     ws_task = asyncio.create_task(listen_for_updates())
     scheduler_task = asyncio.create_task(start_scheduler())

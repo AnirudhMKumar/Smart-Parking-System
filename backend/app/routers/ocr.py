@@ -71,7 +71,7 @@ def parse_ocr_result(result) -> list[OCRResult]:
 
 @router.post("/recognize", response_model=OCRResponse)
 async def recognize_plate(file: UploadFile, db: Session = Depends(get_db)):
-    if not file.filename.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
+    if not file.filename or not file.filename.lower().endswith((".jpg", ".jpeg", ".png", ".bmp")):
         raise HTTPException(status_code=400, detail="Unsupported image format")
 
     image_bytes = await file.read()
