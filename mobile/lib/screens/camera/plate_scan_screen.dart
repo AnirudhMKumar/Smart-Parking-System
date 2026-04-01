@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,12 +18,14 @@ class _PlateScanScreenState extends ConsumerState<PlateScanScreen> {
   String? _detectedPlate;
   double? _confidence;
   String? _error;
+  XFile? _capturedImage;
 
   Future<void> _captureAndScan(ImageSource source) async {
     final image = await _picker.pickImage(source: source, imageQuality: 85);
     if (image == null) return;
 
     setState(() {
+      _capturedImage = image;
       _isProcessing = true;
       _detectedPlate = null;
       _confidence = null;
@@ -109,6 +112,20 @@ class _PlateScanScreenState extends ConsumerState<PlateScanScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Image preview
+            if (_capturedImage != null) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.file(
+                  File(_capturedImage!.path),
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             // Camera buttons
             Container(
               padding: const EdgeInsets.all(24),
@@ -160,7 +177,14 @@ class _PlateScanScreenState extends ConsumerState<PlateScanScreen> {
             const SizedBox(height: 24),
 
             // Processing indicator
-            if (_isProcessing) const Center(child: CircularProgressIndicator()),
+            if (_isProcessing) ...[
+              const Center(child: CircularProgressIndicator()),
+              const SizedBox(height: 16),
+              const Text('Processing image...',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey)),
+              const SizedBox(height: 24),
+            ],
 
             // Error
             if (_error != null) ...[
@@ -241,7 +265,11 @@ class _PlateScanScreenState extends ConsumerState<PlateScanScreen> {
                     ),
                     const SizedBox(height: 12),
                     TextButton(
-                        onPressed: () => setState(() => _detectedPlate = null),
+                        onPressed: () => setState(() {
+                              _detectedPlate = null;
+                              _capturedImage = null;
+                              _error = null;
+                            }),
                         child: const Text('Scan Another')),
                   ],
                 ),

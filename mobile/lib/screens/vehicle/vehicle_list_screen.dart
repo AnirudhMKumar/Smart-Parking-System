@@ -94,7 +94,25 @@ class _VehicleListScreenState extends ConsumerState<VehicleListScreen> {
     }
   }
 
-  Future<void> _deleteVehicle(int id) async {
+  Future<void> _deleteVehicle(int id, String plateNumber) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Vehicle'),
+        content: Text('Are you sure you want to remove $plateNumber?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Delete')),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
     try {
       final api = ref.read(apiServiceProvider);
       await api.deleteVehicle(id);
@@ -105,7 +123,7 @@ class _VehicleListScreenState extends ConsumerState<VehicleListScreen> {
     } catch (e) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
     }
   }
 
@@ -156,7 +174,8 @@ class _VehicleListScreenState extends ConsumerState<VehicleListScreen> {
                           trailing: IconButton(
                               icon: const Icon(Icons.delete_outline,
                                   color: Colors.red),
-                              onPressed: () => _deleteVehicle(v['id'])),
+                              onPressed: () =>
+                                  _deleteVehicle(v['id'], v['plate_number'])),
                         ),
                       );
                     },

@@ -11,44 +11,84 @@ class ReservationHistoryScreen extends ConsumerWidget {
     final historyAsync = ref.watch(reservationHistoryProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Reservation History')),
+      appBar: AppBar(
+        title: const Text('Reservation History'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.invalidate(reservationHistoryProvider),
+          ),
+        ],
+      ),
       body: historyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('No history found')),
+        error: (e, _) => Center(
+            child:
+                Text(e.toString(), style: const TextStyle(color: Colors.red))),
         data: (reservations) {
-          if (reservations.isEmpty)
-            return const Center(child: Text('No reservation history'));
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: reservations.length,
-            itemBuilder: (context, index) {
-              final r = reservations[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: r.isCompleted
-                        ? Colors.green.withOpacity(0.1)
-                        : Colors.red.withOpacity(0.1),
-                    child: Icon(r.isCompleted ? Icons.check : Icons.close,
-                        color: r.isCompleted ? Colors.green : Colors.red),
+          if (reservations.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.history, size: 64, color: Colors.grey.shade300),
+                  const SizedBox(height: 16),
+                  Text('No reservation history',
+                      style:
+                          TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+                ],
+              ),
+            );
+          }
+          return RefreshIndicator(
+            onRefresh: () => ref.refresh(reservationHistoryProvider.future),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: reservations.length,
+              itemBuilder: (context, index) {
+                final r = reservations[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: r.isCompleted
+                          ? Colors.green.withOpacity(0.1)
+                          : r.isCancelled
+                              ? Colors.red.withOpacity(0.1)
+                              : Colors.orange.withOpacity(0.1),
+                      child: Icon(
+                        r.isCompleted
+                            ? Icons.check
+                            : r.isCancelled
+                                ? Icons.close
+                                : Icons.pending,
+                        color: r.isCompleted
+                            ? Colors.green
+                            : r.isCancelled
+                                ? Colors.red
+                                : Colors.orange,
+                      ),
+                    ),
+                    title:
+                        Text('Spot #${r.spotId} - ${r.plateNumber ?? "N/A"}'),
+                    subtitle:
+                        Text(DateFormat('MMM d, h:mm a').format(r.startTime)),
+                    trailing: r.totalAmount != null
+                        ? Text('\$${r.totalAmount!.toStringAsFixed(2)}',
+                            style: const TextStyle(fontWeight: FontWeight.bold))
+                        : Chip(
+                            label: Text(r.status,
+                                style: const TextStyle(fontSize: 12)),
+                            backgroundColor: r.isCompleted
+                                ? Colors.green.shade50
+                                : r.isCancelled
+                                    ? Colors.red.shade50
+                                    : Colors.orange.shade50,
+                          ),
                   ),
-                  title: Text('Spot #${r.spotId} - ${r.plateNumber ?? "N/A"}'),
-                  subtitle:
-                      Text(DateFormat('MMM d, h:mm a').format(r.startTime)),
-                  trailing: r.totalAmount != null
-                      ? Text('\$${r.totalAmount!.toStringAsFixed(2)}',
-                          style: const TextStyle(fontWeight: FontWeight.bold))
-                      : Chip(
-                          label: Text(r.status,
-                              style: const TextStyle(fontSize: 12)),
-                          backgroundColor: r.isCompleted
-                              ? Colors.green.shade50
-                              : Colors.red.shade50,
-                        ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),

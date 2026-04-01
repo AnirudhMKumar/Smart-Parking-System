@@ -38,10 +38,14 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
   }
 
   Future<void> _pickTime(bool isStart) async {
+    final now = DateTime.now();
+    final initialDate = isStart ? _startTime : _endTime;
+    final firstDate = now.isAfter(initialDate) ? now : initialDate;
+
     final date = await showDatePicker(
       context: context,
-      initialDate: isStart ? _startTime : _endTime,
-      firstDate: DateTime.now(),
+      initialDate: firstDate,
+      firstDate: now,
       lastDate: DateTime.now().add(const Duration(days: 7)),
     );
     if (date == null || !mounted) return;
@@ -56,11 +60,14 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
       final dt =
           DateTime(date.year, date.month, date.day, time.hour, time.minute);
       if (isStart) {
-        _startTime = dt;
+        _startTime =
+            dt.isBefore(now) ? now.add(const Duration(minutes: 15)) : dt;
         if (_endTime.isBefore(_startTime))
           _endTime = _startTime.add(const Duration(hours: 1));
       } else {
-        _endTime = dt;
+        _endTime = dt.isBefore(_startTime)
+            ? _startTime.add(const Duration(hours: 1))
+            : dt;
       }
     });
   }
@@ -184,15 +191,32 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
                                   ? AppTheme.primaryColor
                                   : AppTheme.secondaryColor),
                         ),
-                        child: Center(
-                          child: Text(
-                            spot.spotNumber,
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              spot.spotNumber,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: selected
+                                      ? Colors.white
+                                      : AppTheme.secondaryColor),
+                            ),
+                            if (spot.spotType != 'regular')
+                              Icon(
+                                spot.spotType == 'ev'
+                                    ? Icons.ev_station
+                                    : spot.spotType == 'handicap'
+                                        ? Icons.accessible
+                                        : spot.spotType == 'compact'
+                                            ? Icons.car_repair
+                                            : Icons.directions_car,
+                                size: 14,
                                 color: selected
-                                    ? Colors.white
-                                    : AppTheme.secondaryColor),
-                          ),
+                                    ? Colors.white70
+                                    : AppTheme.secondaryColor,
+                              ),
+                          ],
                         ),
                       ),
                     );
