@@ -44,7 +44,7 @@ class _PlateScanScreenState extends ConsumerState<PlateScanScreen> {
         setState(() => _error = 'No license plate detected. Try again.');
       }
     } catch (e) {
-      setState(() => _error = 'Error: ${e.toString()}');
+      setState(() => _error = e.toString());
     } finally {
       setState(() => _isProcessing = false);
     }
@@ -62,7 +62,7 @@ class _PlateScanScreenState extends ConsumerState<PlateScanScreen> {
             'Plate: $_detectedPlate\nSpot: ${result['spot_number'] ?? 'Auto-assigned'}');
       }
     } catch (e) {
-      setState(() => _error = 'Entry failed: ${e.toString()}');
+      setState(() => _error = e.toString());
     } finally {
       setState(() => _isProcessing = false);
     }
@@ -80,7 +80,7 @@ class _PlateScanScreenState extends ConsumerState<PlateScanScreen> {
             'Plate: $_detectedPlate\nDuration: ${result['duration_minutes'] ?? 0} min\nAmount: \$${result['amount'] ?? 0}');
       }
     } catch (e) {
-      setState(() => _error = 'Exit failed: ${e.toString()}');
+      setState(() => _error = e.toString());
     } finally {
       setState(() => _isProcessing = false);
     }

@@ -94,7 +94,7 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
     } catch (e) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -152,7 +152,8 @@ class _ReservationScreenState extends ConsumerState<ReservationScreen> {
             const SizedBox(height: 12),
             spotsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Text('Error: $e'),
+              error: (e, _) =>
+                  Text(e.toString(), style: const TextStyle(color: Colors.red)),
               data: (spots) {
                 if (spots.isEmpty)
                   return const Card(

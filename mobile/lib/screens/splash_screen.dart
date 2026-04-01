@@ -14,7 +14,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 1), () {
       if (!mounted) return;
       final auth = ref.read(authProvider);
       if (auth.isAuthenticated) {
@@ -39,14 +39,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: const Icon(Icons.local_parking, size: 60, color: Colors.white),
+              child: const Icon(Icons.local_parking,
+                  size: 60, color: Colors.white),
             ),
             const SizedBox(height: 24),
-            Text('SmartPS', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Text('SmartPS',
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineMedium
+                    ?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('Smart Parking System', style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey)),
-            const SizedBox(height: 48),
-            const CircularProgressIndicator(),
+            Text('Smart Parking System',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(color: Colors.grey)),
           ],
         ),
       ),

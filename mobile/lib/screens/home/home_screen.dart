@@ -24,6 +24,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   @override
+  void dispose() {
+    ref.read(webSocketProvider).disconnect();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final statsAsync = ref.watch(parkingStatsProvider);
@@ -91,7 +97,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 error: (e, _) => Card(
                     child: Padding(
                         padding: const EdgeInsets.all(16),
-                        child: Text('Error: $e'))),
+                        child: Text(
+                            'Unable to load parking stats. Pull down to refresh.',
+                            style: TextStyle(color: Colors.grey.shade600)))),
                 data: (stats) => Card(
                   child: Padding(
                     padding: const EdgeInsets.all(20),
